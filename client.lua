@@ -251,11 +251,62 @@ Citizen.CreateThread(function()
         end
     end
 end)
+-- Add this to your InitializeCategories function in client.lua
+-- Initialize wheels properly for ALL vehicles (not just bikes)
+function InitializeWheels()
+    -- Define and initialize wheel categories if they don't exist
+    if not wheelCategories.frontWheel then
+        wheelCategories.frontWheel = {modType = 23, maxLevel = 0, prices = {}, current = 0}
+    end
+    
+    if not wheelCategories.backWheel then
+        wheelCategories.backWheel = {modType = 24, maxLevel = 0, prices = {}, current = 0}
+    end
+    
+    -- Always initialize front wheels
+    local modType = 23 -- Front wheels
+    SetVehicleModKit(currentVehicle, 0)
+    local maxMods = GetNumVehicleMods(currentVehicle, modType)
+    
+    wheelCategories.frontWheel.maxLevel = maxMods
+    wheelCategories.frontWheel.current = GetVehicleMod(currentVehicle, modType) + 1
+    
+    -- Generate prices for front wheels based on Config
+    wheelCategories.frontWheel.prices = {}
+    local basePrice = Config.PriceConfig.Wheels.frontWheel and Config.PriceConfig.Wheels.frontWheel.basePrice or 200
+    local multiplier = Config.PriceConfig.Wheels.frontWheel and Config.PriceConfig.Wheels.frontWheel.priceMultiplier or 120
+    
+    for i = 1, maxMods do
+        table.insert(wheelCategories.frontWheel.prices, basePrice + (i * multiplier))
+    end
+    
+    -- Initialize back wheels for all vehicles, but only show for bikes in UI
+    local backModType = 24 -- Back wheels
+    local backMaxMods = GetNumVehicleMods(currentVehicle, backModType)
+    
+    wheelCategories.backWheel.maxLevel = backMaxMods
+    wheelCategories.backWheel.current = GetVehicleMod(currentVehicle, backModType) + 1
+    
+    -- Generate prices for back wheels based on Config
+    wheelCategories.backWheel.prices = {}
+    local backBasePrice = Config.PriceConfig.Wheels.backWheel and Config.PriceConfig.Wheels.backWheel.basePrice or 200
+    local backMultiplier = Config.PriceConfig.Wheels.backWheel and Config.PriceConfig.Wheels.backWheel.priceMultiplier or 120
+    
+    for i = 1, backMaxMods do
+        table.insert(wheelCategories.backWheel.prices, backBasePrice + (i * backMultiplier))
+    end
+    
+    -- Initialize wheel type
+    wheelCategories.wheelType.current = GetVehicleWheelType(currentVehicle)
+end
 
 -- Fonction pour initialiser toutes les catégories
 function InitializeCategories()
     -- Définir obligatoirement le ModKit avant d'accéder aux mods
     SetVehicleModKit(currentVehicle, 0)
+
+
+    InitializeWheels()
     
     -- Debug: Afficher des informations du véhicule pour le débogage
     
